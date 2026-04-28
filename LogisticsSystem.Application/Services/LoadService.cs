@@ -26,14 +26,12 @@ namespace LogisticsSystem.Application.Services
 
         public async Task<Load> CreateLoadAsync(CreateLoadDto dto)
         {
-            if (string.IsNullOrWhiteSpace(dto.LoadName))
-                throw new Exception("Yük adı boş olamaz.");
+            // İş kuralı validasyonları
+            if (dto.SourceWarehouseId == dto.TargetWarehouseId)
+                throw new ArgumentException("Kaynak ve hedef depo farklı olmalıdır.");
 
-            if (dto.Weight <= 0)
-                throw new Exception("Yük ağırlığı 0'dan büyük olmalıdır.");
-
-            if (dto.Quantity <= 0)
-                throw new Exception("Miktar 0'dan büyük olmalıdır.");
+            if (dto.CreatedDate > DateTime.Now)
+                throw new ArgumentException("Oluşturma tarihi gelecekte olamaz.");
 
             var load = new Load
             {
@@ -61,14 +59,12 @@ namespace LogisticsSystem.Application.Services
             if (load == null)
                 return null;
 
-            if (string.IsNullOrWhiteSpace(dto.LoadName))
-                throw new Exception("Yük adı boş olamaz.");
+            // İş kuralı validasyonları
+            if (dto.SourceWarehouseId == dto.TargetWarehouseId)
+                throw new ArgumentException("Kaynak ve hedef depo farklı olmalıdır.");
 
-            if (dto.Weight <= 0)
-                throw new Exception("Yük ağırlığı 0'dan büyük olmalıdır.");
-
-            if (dto.Quantity <= 0)
-                throw new Exception("Miktar 0'dan büyük olmalıdır.");
+            if (dto.CreatedDate > DateTime.Now)
+                throw new ArgumentException("Oluşturma tarihi gelecekte olamaz.");
 
             load.LoadName = dto.LoadName;
             load.LoadTypeId = dto.LoadTypeId;

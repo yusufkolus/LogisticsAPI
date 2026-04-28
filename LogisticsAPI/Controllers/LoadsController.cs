@@ -19,7 +19,7 @@ namespace LogisticsSystem.API.Controllers
         public async Task<IActionResult> GetAllLoads()
         {
             var loads = await _loadService.GetAllLoadsAsync();
-            return Ok(loads);
+            return Ok(new { success = true, data = loads, count = loads.Count });
         }
 
         [HttpGet("{id}")]
@@ -28,40 +28,63 @@ namespace LogisticsSystem.API.Controllers
             var load = await _loadService.GetLoadByIdAsync(id);
 
             if (load == null)
-                return NotFound("Yük bulunamadı.");
+                return NotFound(new { success = false, message = "Yük bulunamadı." });
 
-            return Ok(load);
+            return Ok(new { success = true, data = load });
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateLoad([FromBody] CreateLoadDto dto)
         {
+            // Model validation kontrol
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
+                return BadRequest(new { success = false, errors = errors });
+            }
+
             try
             {
                 var createdLoad = await _loadService.CreateLoadAsync(dto);
-                return Ok(createdLoad);
+                return CreatedAtAction(nameof(GetLoadById), new { id = createdLoad.LoadId }, 
+                    new { success = true, data = createdLoad });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return StatusCode(500, new { success = false, message = "Veritabanı hatası", detail = ex.Message });
             }
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateLoad(int id, [FromBody] UpdateLoadDto dto)
         {
+            // Model validation kontrol
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors.Select(b => b.ErrorMessage));
+                return BadRequest(new { success = false, errors = errors });
+            }
+
             try
             {
                 var updatedLoad = await _loadService.UpdateLoadAsync(id, dto);
 
                 if (updatedLoad == null)
-                    return NotFound("Güncellenecek yük bulunamadı.");
+                    return NotFound(new { success = false, message = "Güncellenecek yük bulunamadı." });
 
-                return Ok(updatedLoad);
+                return Ok(new { success = true, data = updatedLoad });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return StatusCode(500, new { success = false, message = "Veritabanı hatası", detail = ex.Message });
             }
         }
 
@@ -71,9 +94,9 @@ namespace LogisticsSystem.API.Controllers
             var result = await _loadService.DeleteLoadAsync(id);
 
             if (!result)
-                return NotFound("Silinecek yük bulunamadı.");
+                return NotFound(new { success = false, message = "Silinecek yük bulunamadı." });
 
-            return Ok("Yük başarıyla silindi.");
+            return Ok(new { success = true, message = "Yük başarıyla silindi." });
         }
     }
 }
